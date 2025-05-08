@@ -2,65 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My First GitHub Page</title>
+  <title>Face Recognition with Teachable Machine</title>
   <style>
     body {
-      background: linear-gradient(to right, #ffecd2, #fcb69f);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #333;
-      margin: 0;
-      padding: 0;
+      font-family: sans-serif;
       text-align: center;
-    }
-    header {
-      background-color: #ff6f61;
-      color: white;
+      background: linear-gradient(to right, #d4fc79, #96e6a1);
       padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-    main {
-      padding: 40px 20px;
+    video {
+      border: 4px solid #333;
+      border-radius: 10px;
+      margin-top: 20px;
     }
     h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-    }
-    p {
-      font-size: 1.2em;
-    }
-    footer {
-      background-color: #333;
-      color: white;
-      padding: 15px;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      font-size: 0.9em;
-    }
-    a {
-      color: #ffe082;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
+      color: #2c3e50;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🌍 Welcome to My Website!</h1>
-    <p>Hosted with ❤️ on GitHub Pages</p>
-  </header>
+  <h1>🤖 Face Recognition Model</h1>
+  <p>This model will identify faces using Teachable Machine.</p>
+  <button onclick="init()">Start</button>
+  <div><video id="webcam" autoplay playsinline width="300" height="225"></video></div>
+  <h2 id="label">Label: ...</h2>
+  <h3 id="confidence">Confidence: ...</h3>
 
-  <main>
-    <h2>Hello, I'm from India! 🇮🇳</h2>
-    <p>This is my first website hosted on GitHub Pages.</p>
-    <p>I'm learning web development and loving it!</p>
-    <p>Check out my <a href="https://github.com" target="_blank">GitHub profile</a>.</p>
-  </main>
+  <script type="module">
+    import * as tmImage from "https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js";
 
-  <footer>
-    © 2025 My First Website | Made with 💻 and ☕ in India
-  </footer>
+    const URL = "https://teachablemachine.withgoogle.com/models/your-model-id/";
+
+    let model, webcam, labelContainer, maxPredictions;
+
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+
+      webcam = new tmImage.Webcam(300, 225, true);
+      await webcam.setup();
+      await webcam.play();
+      window.requestAnimationFrame(loop);
+
+      document.getElementById("webcam").replaceWith(webcam.canvas);
+    }
+
+    async function loop() {
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+      const prediction = await model.predict(webcam.canvas);
+      prediction.sort((a, b) => b.probability - a.probability);
+      document.getElementById("label").innerText = "Label: " + prediction[0].className;
+      document.getElementById("confidence").innerText = "Confidence: " + (prediction[0].probability * 100).toFixed(2) + "%";
+    }
+  </script>
 </body>
 </html>
